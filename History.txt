@@ -1,0 +1,29 @@
+2009/02/07:  0.3.2
+	Sibling nodes merged during key deletion in some additional cases.
+
+2009/02/06:  0.3.1
+    During key deletion, sibling nodes are now combined in the majority of cases
+		where this is possible.
+	Improvement to ResourceFile::remove(): Now merging free areas in resource
+	    files for more dynamic response.
+	    
+2009/02/02: 0.3.0
+	IndexT is now a configurable template with options for the key interface,
+		index and data file offset sizes, node size and node cache size.
+	Unicode keys now supported.
+
+2009/01/30: 0.2.0
+	Improvements:
+	    64-bit file positions now supported for huge indexes and resource files.
+			Note that this entails new file structures.  Old files will need to
+			be rebuilt.
+		Node cache is now per index instead of globally shared.  Moving towards
+		    making the code thread-safe.
+		IndexKey IndexNode::key0 defined instead char IndexNode::keys[] for
+			syntactic cleanup.
+		Minor speed improvements in Index::insert() (key to insert is not copied so much)
+		Changed a cpl keystrokes in test_ndx and added a command line spec for the
+			index filename.
+	Bug fixes: Cache memory for freed nodes was not being reused.
+                       
+2008/06/10: 0.1.0 - First public release.

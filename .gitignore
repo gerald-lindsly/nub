@@ -1,0 +1,10 @@
+build/
+debug/
+release/
+ipch/
+*.vcxproj.user
+*.ncb
+*.sdf
+*.suo
+*.bsc
+*.lib
