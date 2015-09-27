@@ -1,0 +1,138 @@
+/*  <nub/imemstream> -- Header file implementing input memory streams
+    Copyright (c) 2005-2009 by Gerald Lindsly
+
+    See <nub/Platform.h> for additional copyright information
+*/
+
+#ifndef __NUB_IMEMSTREAM__
+#define __NUB_IMEMSTREAM__
+
+#include <istream>
+
+#ifndef __CLR_OR_THIS_CALL
+#   define __CLR_OR_THIS_CALL
+#endif
+
+#ifndef _MSC_VER
+#define _BADOFF -1
+#endif
+
+namespace nub {
+
+using namespace std;
+
+template<class _Elem, class _Traits>
+class basic_imembuf : public basic_streambuf<_Elem, _Traits>
+{	// stream buffer using a memory buffer
+public:
+	typedef basic_streambuf<_Elem, _Traits> _Mymb;
+
+	explicit __CLR_OR_THIS_CALL basic_imembuf(_Elem* _Ptr=0, size_t _Size=0)
+	{	// construct character buffer from memory buffer.  Default of empty buffer
+		_Mymb::setg(_Ptr, _Ptr, _egptr = _Ptr + _Size);	// setup read buffer
+	}
+
+	virtual __CLR_OR_THIS_CALL ~basic_imembuf()
+	{}
+
+	typedef typename _Traits::int_type int_type;
+	typedef typename _Traits::pos_type pos_type;
+	typedef typename _Traits::off_type off_type;
+
+protected:
+	virtual int_type __CLR_OR_THIS_CALL pbackfail(int_type _Meta = _Traits::eof())
+	{	// put an element back to stream
+		if (_Mymb::gptr() == 0 || _Mymb::gptr() <= _Mymb::eback()
+			|| !_Traits::eq_int_type(_Traits::eof(), _Meta)
+			&& !_Traits::eq(_Traits::to_char_type(_Meta), _Mymb::gptr()[-1]))
+			return _Traits::eof();	// can't put back, fail
+		else {
+            // back up one position and store put-back character
+			_Mymb::gbump(-1);
+			if (!_Traits::eq_int_type(_Traits::eof(), _Meta))
+				*_Mymb::gptr() = _Traits::to_char_type(_Meta);
+			return _Traits::not_eof(_Meta);
+		}
+	}
+
+	virtual int_type __CLR_OR_THIS_CALL underflow()
+	{	// get an element from stream
+		if (_Mymb::gptr() == 0 || _Mymb::gptr() >= _egptr)
+			return _Traits::eof();	// no character, fail
+		return _Traits::to_int_type(*_Mymb::gptr());	// return buffered
+    }
+
+	virtual pos_type __CLR_OR_THIS_CALL seekoff(off_type _Off, ios_base::seekdir _Way,
+		ios_base::openmode _Which = ios_base::in)
+	{	// change position by _Off, according to _Way, _Mode
+
+		if (_Which & ios_base::in && _Mymb::gptr() != 0) {
+			if (_Way == ios_base::end)
+				_Off += (off_type)(_egptr - _Mymb::eback());
+			else if (_Way == ios_base::cur
+				&& (_Which & ios_base::out) == 0)
+				_Off += (off_type)(_Mymb::gptr() - _Mymb::eback());
+			else if (_Way != ios_base::beg)
+				_Off = _BADOFF;
+
+			if (0 <= _Off && _Off <= _egptr - _Mymb::eback())
+			    // change read position
+				_Mymb::gbump((int)(_Mymb::eback() - _Mymb::gptr() + _Off));
+			else
+				_Off = _BADOFF;
+		} else
+			_Off = _BADOFF;	// read not selected, fail
+		return pos_type(_Off);
+	}
+
+	virtual pos_type __CLR_OR_THIS_CALL seekpos(pos_type _Ptr,
+		ios_base::openmode _Mode = ios_base::in)
+	{	// change position to _Pos
+		streamoff _Off = (streamoff)_Ptr;
+
+		if (_Off == _BADOFF)
+			;
+		else if (_Mode & ios_base::in && _Mymb::gptr() != 0) {
+			if (0 <= _Off && _Off <= _egptr - _Mymb::eback())
+				_Mymb::gbump((int)(_Mymb::eback() - _Mymb::gptr() + _Off));
+			else
+				_Off = _BADOFF;
+		} else
+			_Off = _BADOFF;
+		return streampos(_Off);
+	}
+
+private:
+    _Elem* _egptr;  // end of buffer -- optimized alternative to calling egptr()
+};
+
+ 
+template<class _Elem, class _Traits>
+class basic_imemstream : public basic_istream<_Elem, _Traits>
+{	// input stream associated with a memory buffer
+public:
+	typedef basic_imembuf<_Elem, _Traits> _Mymb;
+
+	__CLR_OR_THIS_CALL basic_imemstream(_Elem* _Ptr=0, size_t _Size=0)
+		: basic_istream<_Elem, _Traits>(&_membuffer),
+ 		  _membuffer(_Ptr, _Size)
+    {}
+
+	virtual __CLR_OR_THIS_CALL ~basic_imemstream()
+	{}
+
+	_Mymb* __CLR_OR_THIS_CALL rdbuf() const
+	{	// return pointer to file buffer
+    	return const_cast<_Mymb*>(&_membuffer);
+	}
+
+private:
+	_Mymb _membuffer;	// the string buffer
+};
+
+typedef basic_imemstream<char, char_traits<char>> imemstream;
+
+}
+
+#endif /* __NUB_IMEMSTREAM__ */
+
