@@ -24,7 +24,6 @@ datFilePosType
 ResourceFile::put(void* data, uint32 size)
 {
 	byte* comp = new byte[size + size / 16 + 64 + 3];	// allocate compressed data buffer
-	if (!comp) return 0;
 
 // get wrkmem for lzo
 	bool preallocated = wrkmem != 0;
@@ -130,10 +129,11 @@ ResourceFile::putFile(const char* path)
 	uint32 len = ftell(f);
 	if (fseek(f, 0, SEEK_SET) != 0) failedOp = seekOp;
 	
-	data = new byte[len];
-    if (!data) {
+	try {
+		data = new byte[len];
+	} catch (exception e) {
         fclose(f);
-        throw bad_alloc();
+        throw e;
     }
 
     if (fread(data, 1, len, f) != len) failedOp = "Read";

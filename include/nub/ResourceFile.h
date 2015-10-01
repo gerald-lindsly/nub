@@ -17,7 +17,7 @@ class _NubExport ResourceFile
 public:
 	typedef int64  datFilePosType;
 	typedef uint32 ndxFilePosType;
-	typedef IndexT<FileSystem, IKeyASCIIZ, 1024, ndxFilePosType, datFilePosType> ndxFileType;
+	typedef IndexT<IKeyASCIIZ, FileSystem, 1024, ndxFilePosType, datFilePosType> ndxFileType;
 
     ResourceFile() : dat(0), wrkmem(0) {}
 	_NubExport ~ResourceFile();

@@ -9,6 +9,12 @@
     The code presented here is not written entirely from scratch, but has essentially
     been totally rewritten.  I have made so many improvements, data structure changes
     and bug fixes that this code is generally unrecognizable when compared to the original.
+
+*/
+/*	<BD-Calvin> Gero: fixed __int64 in Platform.h, removed all exception specifications, 
+		compiled with -fpermissive (const correctness issues), changed an fsetpos to fseek.
+
+	<TinoDidriksen> You don't need COM for C# - you can call native code with P/Invoke.
 */
 
 #ifndef __NUB_INDEX_H__
@@ -88,16 +94,16 @@ public:
 };
 
 
-template <typename FileSystemT = FileSystem,
-          class    IKey        = IKeyASCIIZ,
+template <class    IKey        = IKeyASCIIZ,
+          typename FileSystemT = FileSystem,
           int      nNodeSize   = 512,
 		  typename ndxFilePosT = uint32,
 		  typename datFilePosT = uint32>
 class IndexT
 {
 public:
-	typedef FileSystemT FileSystemType;
 	typedef IKey        IKeyType;
+	typedef FileSystemT FileSystemType;
 	typedef ndxFilePosT ndxFilePosType;
 	typedef datFilePosT datFilePosType;
 
@@ -250,14 +256,12 @@ public:
 		// need room for at least 3 keys in a node so split() will work
 		nMaxKeySize = cMaxKeyData/3 - cKeyExtra;
 		curKey = new byte[nMaxKeySize];
-		if (!curKey) throw bad_alloc();
 		clearCurKey();
 		cache = new Node*[maxCache];
-		if (!cache) throw bad_alloc();
 		Node** c = cache;
 		Node* node;
 		for (int i = 0; i < nMaxCache; i++) {
-			if (!(node = new Node)) throw bad_alloc();
+			node = new Node;
 			*c++ = node;
 			node->keyofs[0] = (uint16)FIELDOFFSET(Node, key0);
 		}
@@ -270,7 +274,7 @@ public:
 		Node** c = cache;
 		for (int i = 0; i < nMaxCache; i++)
 			delete *c++;
-		delete cache;
+		delete[] cache;
 	}
 
     /// Create new index
@@ -355,17 +359,16 @@ public:
 		if (!first() && n == 0) return true;
 		if (n == 0) return false;
 		int i;
-		void* k = malloc(nMaxKeySize);
-		if (!k) throw bad_alloc();
+		void* k = new byte[nMaxKeySize];
 		IKey::copy(k, curKey);
 		for (i = 1; i < n && next(); i++) {
 			if (IKey::compare(k, curKey) > 0) {
-				free(k);
+				delete[] k;
 				return false;
 			}
 			IKey::copy(k, curKey);
 		}
-		free(k);
+		delete[] k;
    		return i == n && !next();
 	}
 
@@ -433,9 +436,10 @@ public:
 	}
 
     /// Change the data offset of the current key
-	void change(const datFilePosT& offset) throw(...) // can throw io_error or logic_error (no current key)
+	bool change(const datFilePosT& offset) throw(...) // can throw io_error or logic_error (no current key)
 	{
-		if (!f || !stacktop) {
+		if (!f) return false;
+		if (!stacktop) {
 			char message[1024];
 			sprintf(message, "Stack underflow: no current key. File: %s", FileSystemT::getName(f));
 			throw logic_error(message);
@@ -445,6 +449,7 @@ public:
 		Node* node = top(k, i);
 		curOffset = k->offset = offset;
 		node->dirty = true;
+		return true;
 	}
 
     /// Remove a key.  Only first instance of a key is removed when there are duplicates.
@@ -655,7 +660,6 @@ public:
 			// need only the offset and key
 			int tlen = node->keyofs[-1-i] - node->keyofs[-i];
 			KeyEntry* tkey = (KeyEntry*) new byte[tlen];
-			if (!tkey) throw bad_alloc();
 			memcpy(tkey, k, tlen);
 			node->dirty = true;
 			if (!--node->count && stacktop) {
@@ -694,7 +698,7 @@ public:
 				}
 			}
 			memcpy(k, tkey, tlen);
-			delete tkey;
+			delete[] tkey;
 			node->dirty = true;
 			k = (KeyEntry*)((byte*)k + tlen);
 			i++;
@@ -855,10 +859,10 @@ protected:
     uint16      hNodeSize;    // Stored nNodeSize for open() sanity check
 	uint16      hMaxKeySize;  // Stored for sanity check
 
-	ndxFilePosT root;      // File offset of the root node
-	ndxFilePosT eof;       // File offset of the end of file
-	ndxFilePosT freelist;  // File offset of free node list
-	int32       n;         // File size (# keys, that is)
+	ndxFilePosT root;         // File offset of the root node
+	ndxFilePosT eof;          // File offset of the end of file
+	ndxFilePosT freelist;	  // File offset of free node list
+	int32       n;			  // File size (# keys, that is)
 
 	bool        dups;         // index allows duplicate keys
 
@@ -983,7 +987,7 @@ protected:
 		cache[cacheUsed] = node;
 	}
 
-	// put a node and key index on the stack
+	// put a node and key index onto the stack
 	void push(Node* node, int i) throw(...)
 	{
 		StackFrame* stk = &stack[stacktop++];

@@ -10,6 +10,6 @@ namespace nub {
 
 // basic use template instatiation
 
-template class IndexT<FileSystem, IKeyUTF16>;
+template class IndexT<IKeyUTF16>;
 
 };

@@ -8,3 +8,6 @@ ipch/
 *.suo
 *.bsc
 *.lib
+*.pdb
+*.ilk
+test_ndx/test_ndx_d.exe

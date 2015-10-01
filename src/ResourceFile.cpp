@@ -6,7 +6,7 @@
 
 #include "_ResourceFile.h"
 
-template IndexT<FileSystem, IKeyASCIIZ, 1024, ResourceFile::ndxFilePosType, ResourceFile::datFilePosType>;
+template IndexT<IKeyASCIIZ, FileSystem, 1024, ResourceFile::ndxFilePosType, ResourceFile::datFilePosType>;
 
 struct Init {
 	Init() { lzo_init(); }
@@ -63,12 +63,13 @@ ResourceFile::open(const char* _filename, bool create) throw(...)
     close();
 	size_t len = strlen(_filename);
 	filename = new char[len+1];
-    if (!filename) throw bad_alloc();
 	strcpy(filename, _filename);
-    char* tname = new char[len+3];
-    if (!tname) {
+	char* tname;
+	try {
+		tname = new char[len+3];
+	} catch (...) {
         delete filename;
-        throw bad_alloc();
+        throw;
     }
     strcpy(tname, filename);
 	strcpy(tname + len, ".1");
