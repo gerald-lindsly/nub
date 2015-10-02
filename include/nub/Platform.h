@@ -27,6 +27,8 @@
 #ifndef __NUB_PLATFORM_H__
 #define __NUB_PLATFORM_H__
 
+#include <cstdint>
+
 namespace nub {
 
 // platform / compiler
@@ -201,7 +203,7 @@ typedef unsigned int   uint32;
 typedef unsigned short uint16;
 typedef unsigned char  uint8;
 typedef unsigned char  byte;
-typedef __int64        int64;
+typedef std::int64_t   int64;
 // typedef long long   tFilePos;
 
 typedef int64          tFilePos;

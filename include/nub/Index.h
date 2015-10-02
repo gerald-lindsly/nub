@@ -15,6 +15,10 @@
 		compiled with -fpermissive (const correctness issues), changed an fsetpos to fseek.
 
 	<TinoDidriksen> You don't need COM for C# - you can call native code with P/Invoke.
+	
+	<BD-Calvin> http://symas.com/mdb/
+<BD-Calvin> https://github.com/google/leveldb
+<BD-Calvin> bdb, rocksdb, even sqlite
 */
 
 #ifndef __NUB_INDEX_H__
@@ -35,7 +39,8 @@ const byte ndxMINOR = 0;
 const int  ndxMaxStack = 64;  // Maximum tree height
 
 
-/* In the exception specifictions below, throw(...) with no comment indicates that the function can throw 
+/* Exception specifictions removed as of 0.3.3 
+       throw(...) with no comment did indicates that the function can throw
       io_error      - Usually either disk full or the index file is corrupted.
       runtime_error - Index is too deep.  Probably indicates corrupted index file.
                       See ndxMaxStack.  Default of 64 should be impossible to overflow (M-way branching)
@@ -160,7 +165,7 @@ protected:
 		ndxFilePosT* rson() { return &(keyI(count)->lson); }
 
 		/// Split node in two
-		int	split(IndexT* ndx) throw(...)
+		int	split(IndexT* ndx) // throw(...)
 		{
 			// Find entry to be moved up a level
 			uint16 endkeys = keyofs[-count];
@@ -243,7 +248,7 @@ protected:
 
 public:
     /// Constructor.
-	IndexT(int maxCache=10) throw(...) :   // can throw bad_alloc
+	IndexT(int maxCache=10) : // throw(...) :   // can throw bad_alloc
 		f(0), cacheUsed(0), stacktop(0), n(0), nMaxCache(maxCache)
 	{
 		const int cNodeExtra  = sizeof(int32)        // Overhead per node: count &
@@ -268,7 +273,7 @@ public:
 	}
 
     /// Destructor, closes index
-	IndexT::~IndexT() throw(...)
+	IndexT::~IndexT() // throw(...)
 	{
 		close();
 		Node** c = cache;
@@ -278,7 +283,7 @@ public:
 	}
 
     /// Create new index
-	void create(char* name, bool _dups=false) throw(...)  // can throw bad_alloc or io_error
+	void create(char* name, bool _dups=false) // throw(...)  // can throw bad_alloc or io_error
 	{
 		if (f) FileSystemT::close(f);
 		resetCache();
@@ -300,7 +305,7 @@ public:
 	}
 
     /// Open existing index.  Returns false if file does not exist
-	bool open(char* name) throw(...)  // can throw bad_alloc or io_error
+	bool open(char* name) // throw(...)  // can throw bad_alloc or io_error
 	{
 		if (f) FileSystemT::close(f);
 		resetCache();
@@ -329,7 +334,7 @@ public:
 	}
 
     /// Close the index in order to open another
-	void close() throw(...) // can throw io_error
+	void close() // throw(...) // can throw io_error
 	{
 		if (f) {
 			Node** c = cache;
@@ -348,12 +353,14 @@ public:
 	}
 
     /// Return file size (# of keys)
-	int count() const throw() { return n; }
-	const int maxKeySize() const throw () { return nMaxKeySize; }
+	int count() const // noexcept // throw()
+		{ return n; }
+	const int maxKeySize() const // noexcept // throw ()
+		{ return nMaxKeySize; }
 
 
     /// Test index validity (true if valid)
-	bool valid() throw(...)
+	bool valid() // throw(...)
 	{
 		if (!f) return false;
 		if (!first() && n == 0) return true;
@@ -373,11 +380,13 @@ public:
 	}
 
     /// Return current key (and data offset)
-	const void* key() const throw() { return curKey; }
-	datFilePosT offset() const throw() { return curOffset; }
+	const void* key() const // noexcept // throw()
+		{ return curKey; }
+	datFilePosT offset() const // noexept // throw()
+		{ return curOffset; }
 
     /// Insert a new key (and data offset).  Can return false if key already exists and no duplicates allowed
-	bool insert(const void* key, const datFilePosT& offset) throw(...)  // can throw io_error, runtime_error or ivalid_argument (key too long)
+	bool insert(const void* key, const datFilePosT& offset) // throw(...)  // can throw io_error, runtime_error or ivalid_argument (key too long)
 	{
 		if (!f) return false;
 
@@ -403,7 +412,7 @@ public:
 
 	/// Find a key.  If duplicates are allowed, finds the first instance of a key (lowest data offset).
     //   Note that duplicates are in sorted order by data offset
-	bool find(const void* key) throw(...)
+	bool find(const void* key) // throw(...)
 	{
 		if (!f) return false;
 		stacktop = 0;
@@ -419,7 +428,7 @@ public:
 	}
 
     /// Find key, specific record
-	bool find(const void* key, const datFilePosT& offset) throw(...)
+	bool find(const void* key, const datFilePosT& offset) // throw(...)
 	{
 		if (!f) return false;
 		stacktop = 0;
@@ -436,7 +445,7 @@ public:
 	}
 
     /// Change the data offset of the current key
-	bool change(const datFilePosT& offset) throw(...) // can throw io_error or logic_error (no current key)
+	bool change(const datFilePosT& offset) // throw(...) // can throw io_error or logic_error (no current key)
 	{
 		if (!f) return false;
 		if (!stacktop) {
@@ -454,7 +463,7 @@ public:
 
     /// Remove a key.  Only first instance of a key is removed when there are duplicates.
     //      current key is set to the key following the removed key
-	bool remove(const void* key) throw(...)
+	bool remove(const void* key) // throw(...)
 	{
 		if (!find(key)) return false;
 		return remove_current();
@@ -462,7 +471,7 @@ public:
 
     /// Remove a key with a given offset
     //      current key is set to the key following the removed key
-	bool remove(const void* key, const datFilePosT& offset) throw(...)
+	bool remove(const void* key, const datFilePosT& offset) // throw(...)
 	{
 		if (!find(key, offset)) return false;
 		return remove_current();
@@ -470,7 +479,7 @@ public:
 
     /// Remove the current key
     //      current key is set to the key following the removed key
-	bool remove_current() throw(...)
+	bool remove_current() // throw(...)
 	{
 		if (!f) return false;
 		if (!stacktop) return false;
@@ -730,7 +739,7 @@ public:
 	}
 
     /// Goto beginning of index for sequential scanning
-	bool first() throw(...)
+	bool first() // throw(...)
 	{
 		if (!f) return false;
 		stacktop = 0;
@@ -751,7 +760,7 @@ public:
 	}
 
     /// Goto end of index for reverse scanning
-	bool last() throw(...)
+	bool last() // throw(...)
 	{
 		if (!f) return false;
 		stacktop = 0;
@@ -775,7 +784,7 @@ public:
 	}
 
     /// Goto next key from the current. returns false at eof
-	bool next() throw(...)
+	bool next() // throw(...)
 	{
 		if (!f || !stacktop) return false;
 
@@ -812,7 +821,7 @@ public:
 	}
 
     /// Goto previous key. returns false at bof
-	bool prev() throw(...)
+	bool prev() // throw(...)
 	{
 		if (!f || !stacktop) return false;
 
@@ -841,10 +850,10 @@ public:
 	}
 
     /// Returns true if duplicate keys are permitted
-	bool dupsAllowed() const throw() { return dups; }
+	bool dupsAllowed() const // noexcept // throw() { return dups; }
 
     /// Debugging code to output the index tree
-	void print(char* filename) throw(...)
+	void print(char* filename) // throw(...)
 	{
 		FILE* outf = fopen(filename, "w");
 		_print(outf, root, 0);
@@ -901,27 +910,27 @@ protected:
 	}
 
 	/// seek to specified offset in index file
-	void seek(const ndxFilePosT& offset) throw(...)  // can throw io_error
+	void seek(const ndxFilePosT& offset) // throw(...)  // can throw io_error
 	{
 		FileSystemT::seek(f, offset);
 	}
 
     /// Read header or node
-	void read(const ndxFilePosT& offset, void* buffer, uint16 size) throw(...)  // can throw io_error
+	void read(const ndxFilePosT& offset, void* buffer, uint16 size) // throw(...)  // can throw io_error
 	{
 		FileSystemT::seek(f, offset);
 		FileSystemT::read(f, buffer, size);
 	}
 
 	/// Write header or node
-    void write(const ndxFilePosT& offset, void* buffer, uint16 size) throw(...)  // can throw io_error
+    void write(const ndxFilePosT& offset, void* buffer, uint16 size) // throw(...)  // can throw io_error
 	{
 		FileSystemT::seek(f, offset);
 		FileSystemT::write(f, buffer, size);
 	}
 
      /// Get a specific node
-	Node* getNode(const ndxFilePosT& offset) throw(...) // can throw io_error(), called by almost everything
+	Node* getNode(const ndxFilePosT& offset) // throw(...) // can throw io_error(), called by almost everything
 	{
 		Node* node = 0;
 		int i = cacheUsed;
@@ -956,7 +965,7 @@ protected:
 	}
 
     // Get an empty node (maybe from freelist)
-	Node* newNode() throw(...) // can throw io_error(), called by insert(), create()
+	Node* newNode() // throw(...) // can throw io_error(), called by insert(), create()
 	{
 		Node* node = getNode(0); // New slot in the cache
 		if (freelist) {          // If we can use an old node
@@ -973,7 +982,7 @@ protected:
 	}
 
 	// add a node to the free list on disk
-	void freeNode(Node* node)
+	void freeNode(Node* node) // noexcept
 	{
 		write(node->offset, &freelist, sizeof(ndxFilePosT));
 		freelist = node->offset;
@@ -988,7 +997,7 @@ protected:
 	}
 
 	// put a node and key index onto the stack
-	void push(Node* node, int i) throw(...)
+	void push(Node* node, int i) // throw(...)
 	{
 		StackFrame* stk = &stack[stacktop++];
 		if (stacktop > ndxMaxStack) {
@@ -1001,7 +1010,7 @@ protected:
 	}
 
 	// get top node and key offset the stack and pop it
-	Node* pop(KeyEntry* &k, int &i) throw(...)
+	Node* pop(KeyEntry* &k, int &i) // throw(...)
 	{
 		if (!stacktop) {
 			char message[1024];
@@ -1016,7 +1025,7 @@ protected:
 	}
 
 	// get the top node and key off the stack
-	Node* top(KeyEntry* &k, int &i)
+	Node* top(KeyEntry* &k, int &i) // noexcept
 	{
 		Node* node = pop(k, i);
 		stacktop++;
@@ -1024,7 +1033,7 @@ protected:
 	}
 
 	// Inner insert
-	int	_insert(int size, const ndxFilePosT& root) throw(...)
+	int	_insert(int size, const ndxFilePosT& root) // throw(...)
 	{
 		Node* node = getNode(root);
 		KeyEntry* k;
@@ -1087,7 +1096,7 @@ protected:
 	}
 
 	// Inner key search routine
-	bool _find(const void* key, const ndxFilePosT& root) throw(...)
+	bool _find(const void* key, const ndxFilePosT& root) // throw(...)
 	{
 		Node* node = getNode(root);
 		KeyEntry* k = &node->key0;
@@ -1118,7 +1127,7 @@ protected:
 	}
 
  // Inner key search routine
-	bool _find(const void* key, const datFilePosT& offset, const ndxFilePosT& root) throw(...)
+	bool _find(const void* key, const datFilePosT& offset, const ndxFilePosT& root) // throw(...)
 	{
 		Node* node = getNode(root);
 		KeyEntry* k = &node->key0;
@@ -1152,7 +1161,7 @@ protected:
 		return rcd;
 	}
 
-	void _findNext(void) throw(...)
+	void _findNext(void) // throw(...)
 	{
 		KeyEntry* k;
 		int i;
@@ -1183,7 +1192,7 @@ protected:
 		return node->keyofs[-i] == ofs;
 	}
 
-	void _print(FILE* outf, const ndxFilePosT& offset, int level) throw(...)
+	void _print(FILE* outf, const ndxFilePosT& offset, int level) // throw(...)
 	{
 		for (int i = 0; i < level * 8; i++)
 			fputc(' ', outf);
