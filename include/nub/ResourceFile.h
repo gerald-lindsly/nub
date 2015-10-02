@@ -60,7 +60,7 @@ public:
 
 // "protected"
 	// These two functions bypass the index file.  The data will not
-	// be retrievable unluss you have an alternate method for remembering
+	// be retrievable unless you have an alternate method for remembering
 	// the offset returned by put().  get() comes in handy if you index
 	// the file by an additional index.
 
@@ -77,12 +77,12 @@ protected:
 	void  remove(const datFilePosType& offset);
 
     /// internal read - no seek if offset = -1
-    void read(void* data, uint32 size, const datFilePosType& offset = -1) throw(...);
+    void read(void* data, uint32 size, const datFilePosType& offset = -1); // throw(...);
     /// internal write - no seek if offset = -1
-    void write(void* data, uint32 size, const datFilePosType& offset = -1) throw(...);
+    void write(void* data, uint32 size, const datFilePosType& offset = -1); // throw(...);
 
-    char*  filename;
-	FILE*  dat;
+	FileSystem::FileHandle dat;
+	datFilePosType filesize;
 	datFilePosType freelist;
 	ndxFileType ndx;
 

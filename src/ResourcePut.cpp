@@ -79,19 +79,18 @@ ResourceFile::put(void* data, uint32 size)
 
 	if (!offset) {
 		// not found, append to end of file
-        if (fseek(dat, 0, SEEK_END) != 0) {
-            char message[4096];
-            sprintf(message, "Seek error in resource file data: %s.1", filename);
-            fclose(dat);
+		try {
+			FileSystem::seek(dat, filesize);
+		} catch (...) {
+            char message[1024];
+            sprintf(message, "Seek error in resource file data: %s", FileSystem::getName(dat));
+            FileSystem::close(dat);
             dat = 0;
-            delete filename;
             ndx.close();
             throw io_error(message);
         }
-		fpos_t ofs;
-		fgetpos(dat, &ofs);
 		usedHead.size = size + sizeof(UsedHeader);
-		offset = ofs;
+		offset = filesize;
 	}
 	write(&usedHead, sizeof(UsedHeader), offset);
 	write(data, size);
@@ -131,9 +130,9 @@ ResourceFile::putFile(const char* path)
 	
 	try {
 		data = new byte[len];
-	} catch (exception e) {
+	} catch (...) {
         fclose(f);
-        throw e;
+        throw;
     }
 
     if (fread(data, 1, len, f) != len) failedOp = "Read";
@@ -141,7 +140,7 @@ ResourceFile::putFile(const char* path)
     if (failedOp) {
         if (data) delete data;
         fclose(f);
-        char message[4096];
+        char message[1024];
         sprintf(message, "%s failed on file %s", failedOp, path);
         throw io_error(message);
     }

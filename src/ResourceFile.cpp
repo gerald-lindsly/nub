@@ -14,41 +14,43 @@ struct Init {
 
 
 void
-ResourceFile::read(void* data, uint32 size, const datFilePosType& offset) throw(...)
+ResourceFile::read(void* data, uint32 size, const datFilePosType& offset) // throw(...)
 {
-    char* failedOp = 0;
-	if (offset != -1) {
-		const fpos_t ofs(offset);
-		if (fsetpos(dat, &ofs)) failedOp = "Seek";
-	}
-    if (!failedOp && fread(data, 1, size, dat) != size) failedOp = "Read";
-    if (failedOp) {
-        char message[4096];
-        sprintf(message, "%s failure on resource file data: %s.1", failedOp, filename);
-        fclose(dat);
+    char* op = 0;
+	try {
+		if (offset != -1) {
+			op = "Seek";
+			FileSystem::seek(dat, offset);
+		}
+		op = "Read";
+		FileSystem::read(dat, data, size);
+	} catch (...) {
+        char message[1024];
+        sprintf(message, "%s failure on resource file data: %s", op, FileSystem::getName(dat));
+        FileSystem::close(dat);
         dat = 0;
-        delete filename;
         ndx.close();
         throw io_error(message);
-    }
+	}
 }
 
 
 void
-ResourceFile::write(void* data, uint32 size, const datFilePosType& offset) throw(...)
+ResourceFile::write(void* data, uint32 size, const datFilePosType& offset) // throw(...)
 {
-    char* failedOp = 0;
-	if (offset != -1) {
-		const fpos_t ofs(offset);
-		if (fsetpos(dat, &ofs)) failedOp = "Seek";
-	}
-    if (!failedOp && fwrite(data, 1, size, dat) != size)  failedOp = "Write";
-    if (failedOp) {
-        char message[4096];
-        sprintf(message, "%s failure on resource file data: %s.1", failedOp, filename);
-        fclose(dat);
+    char* op = 0;
+	try {
+		if (offset != -1) {
+			op = "Seek";
+			FileSystem::seek(dat, offset);
+		}
+		op = "Write";
+		FileSystem::write(dat, data, size);
+	} catch (...) {
+        char message[1024];
+        sprintf(message, "%s failure on resource file data: %s", op, FileSystem::getName(dat));
+        FileSystem::close(dat);
         dat = 0;
-        delete filename;
         ndx.close();
         throw io_error(message);
     }
@@ -56,26 +58,18 @@ ResourceFile::write(void* data, uint32 size, const datFilePosType& offset) throw
 
 
 bool
-ResourceFile::open(const char* _filename, bool create) throw(...)
+ResourceFile::open(const char* filename, bool create) throw(...)
 {
-    char message[4096];
+    char message[1024];
     bool err = false;
     close();
-	size_t len = strlen(_filename);
-	filename = new char[len+1];
-	strcpy(filename, _filename);
-	char* tname;
-	try {
-		tname = new char[len+3];
-	} catch (...) {
-        delete filename;
-        throw;
-    }
+	size_t len = strlen(filename);
+	char* tname = new char[len+3];
     strcpy(tname, filename);
 	strcpy(tname + len, ".1");
-    if (!(dat = fopen(tname, create ? "w+b" : "r+b"))) {
+	dat = create ? FileSystem::create(tname) : FileSystem::open(tname);
+	if (!dat) {
         delete tname;
-        delete filename;
         return false;
     }
 	tname[len+1] = '0';
@@ -84,24 +78,25 @@ ResourceFile::open(const char* _filename, bool create) throw(...)
             ndx.create(tname, false);
         }
         catch (...) {
-			fclose(dat);
+			FileSystem::close(dat);
 			dat = 0;
             delete tname;
-            delete filename;
             throw;
         }
     	freelist = 0;
-
+		filesize = sizeof(filesize) + sizeof(freelist);
+        write(&filesize, sizeof(datFilePosType));
         write(&freelist, sizeof(datFilePosType));
 	} else if (!ndx.open(tname)) {
         sprintf(message, "Index file non-existent for resource file: %s", filename);
-        fclose(dat);
+        FileSystem::close(dat);
         dat = 0;
         delete tname;
-        delete filename;
         throw io_error(message);
-	} else
+	} else {
+        read(&filesize, sizeof(datFilePosType));
         read(&freelist, sizeof(datFilePosType));
+	}
     delete tname;
 	return true;
 }
@@ -111,8 +106,9 @@ void
 ResourceFile::close()
 {
 	if (dat) {
-		write(&freelist, sizeof(freelist), 0);
-		fclose(dat);
+		write(&filesize, sizeof(filesize), 0);
+		write(&freelist, sizeof(freelist));
+		FileSystem::close(dat);
 		dat = 0;
 		ndx.close();
 	}
