@@ -273,7 +273,7 @@ public:
 	}
 
     /// Destructor, closes index
-	IndexT::~IndexT() // throw(...)
+	~IndexT() // throw(...)
 	{
 		close();
 		Node** c = cache;
