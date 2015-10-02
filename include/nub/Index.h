@@ -850,7 +850,8 @@ public:
 	}
 
     /// Returns true if duplicate keys are permitted
-	bool dupsAllowed() const // noexcept // throw() { return dups; }
+	bool dupsAllowed() const // noexcept // throw()
+		{ return dups; }
 
     /// Debugging code to output the index tree
 	void print(char* filename) // throw(...)
