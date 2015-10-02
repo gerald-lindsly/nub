@@ -21,12 +21,14 @@ private:
 public:
 	typedef FileInfo* FileHandle;
 
-	static FileHandle create(const char* name) throw (...) {
+	static FileHandle create(const char* name) // throw (...)
+	{
 		FILE* f = fopen(name, "w+b");
 		return f ? makeFileInfo(f, name) : 0;
 	}
 
-	static FileHandle open(const char* name) throw (...) {
+	static FileHandle open(const char* name) // throw (...)
+	{
 		FILE* f = fopen(name, "r+b");
 		return f ? makeFileInfo(f, name) : 0;
 	}
@@ -41,18 +43,21 @@ public:
 		return fh->name;
 	}
 
-	static void seek(FileHandle fh, int64 pos) throw (...) {
+	static void seek(FileHandle fh, int64 pos) // throw (...)
+	{
 		fpos_t ofs(pos);
 		if (fsetpos(fh->f, &ofs))
 			Throw(fh, "Seek");
 	}
 	
-	static void read(FileHandle fh, void* buffer, int size) throw(...) {
+	static void read(FileHandle fh, void* buffer, int size) // throw(...)
+	{
 		if (fread(buffer, 1, size, fh->f) != size)
 			Throw(fh, "Read");
 	}
 
-	static void write(FileHandle fh, void* buffer, int size) throw(...) {
+	static void write(FileHandle fh, void* buffer, int size) // throw(...) 
+	{
 		if (fwrite(buffer, 1, size, fh->f) != size)
 			Throw(fh, "Write");
 	}
@@ -63,7 +68,8 @@ private:
 		char* name;
 	};
 
-	static FileHandle makeFileInfo(FILE* f, const char* name) throw (...) {
+	static FileHandle makeFileInfo(FILE* f, const char* name) // throw (...)
+	{
 		FileHandle fh = new FileInfo;
 		fh->f = f;
 		int len = strlen(name) + 1;
@@ -76,7 +82,8 @@ private:
 		return fh;
 	}
 
-	static void Throw(FileHandle fh, const char* reason) throw (...) {
+	static void Throw(FileHandle fh, const char* reason) // throw (...)
+	{
 		char msg[1024];
 		sprintf(msg, "%s failure on file %s", reason, fh->name);
 		fclose(fh->f);
