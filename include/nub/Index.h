@@ -69,7 +69,7 @@ public:
 	static const char* toString(const void *key)   { return (const char*) key; }
 	// Used only for error reporting
 
-	static void* emptyKey()                        { return ""; }
+	static const void* emptyKey()                  { return ""; }
 	static int   emptyKeySize()                    { return 1; }
 };
 
@@ -94,7 +94,7 @@ public:
 	static const char* toString(const void *key)   { return "Unicode"; }
 	// Used only for error reporting
 
-	static void* emptyKey()                        { return L""; }
+	static const void* emptyKey()                  { return L""; }
 	static int   emptyKeySize()                    { return sizeof(wchar_t); }
 };
 
