@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8.10)
 project (nub)
 
-include_directories (include/nub)
+include_directories (include)
 
 add_library (nub STATIC src/FileSystem.cpp src/ResourceGet.cpp  
 src/Index.cpp src/ResourcePut.cpp  src/imemstream.cpp
