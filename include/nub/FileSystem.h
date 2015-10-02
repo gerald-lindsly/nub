@@ -45,8 +45,12 @@ public:
 
 	static void seek(FileHandle fh, int64 pos) // throw (...)
 	{
+#if NUB_PLATFORM == NUB_PLATFORM_LINUX
+		if (fseeko(fh->f, pos, SEEK_SET) == -1)
+#else
 		fpos_t ofs(pos);
 		if (fsetpos(fh->f, &ofs))
+#endif
 			Throw(fh, "Seek");
 	}
 	
