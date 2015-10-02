@@ -1,6 +1,11 @@
 cmake_minimum_required (VERSION 2.8.10)
 project (nub)
 
+IF(CMAKE_COMPILER_IS_GNUCXX)
+   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+
 include_directories (include)
 
 add_library (nub STATIC src/FileSystem.cpp src/ResourceGet.cpp  
