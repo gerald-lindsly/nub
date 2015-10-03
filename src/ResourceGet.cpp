@@ -71,7 +71,7 @@ public:
 
     virtual ~iresstream()
     {
-        delete _data;
+        delete (byte*)_data;
     }
 
     void* _data;

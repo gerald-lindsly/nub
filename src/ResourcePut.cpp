@@ -122,9 +122,9 @@ ResourceFile::putFile(const char* path)
 	FILE* f = fopen(path, "rb");
 	if (!f) return false;
 
-    static char* seekOp = "Seek";
+    static const char* seekOp = "Seek";
     byte* data = 0;
-    char* failedOp = 0;
+    const char* failedOp = 0;
 	if (fseek(f, 0, SEEK_END) != 0) failedOp = seekOp;
 	uint32 len = ftell(f);
 	if (fseek(f, 0, SEEK_SET) != 0) failedOp = seekOp;

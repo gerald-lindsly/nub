@@ -320,9 +320,9 @@ public:
 		else if (hNodeSize != nNodeSize)
 			sprintf(message, "Index file NodeSize (%x) in %s does not match compiled code (%x)", hNodeSize, name, nNodeSize);
 		else if (hNdxPosSize != sizeof(ndxFilePosT))
-			sprintf(message, "Index file offsets in %s are %d bytes instead of the compiled (%d)", name, hNdxPosSize, sizeof(ndxFilePosT));
+			sprintf(message, "Index file offsets in %s are %d bytes instead of the compiled (%zu)", name, hNdxPosSize, sizeof(ndxFilePosT));
 		else if (hDatPosSize != sizeof(datFilePosT))
-			sprintf(message, "Data file offsets in %s are %d bytes instead of the compiled (%d)", name, hDatPosSize, sizeof(datFilePosT));
+			sprintf(message, "Data file offsets in %s are %d bytes instead of the compiled (%zu)", name, hDatPosSize, sizeof(datFilePosT));
 		else if (hMaxKeySize != nMaxKeySize)
 			sprintf(message, "MaxKeySize (%x) in %s does not match compiled code (%x)", hMaxKeySize, name, nMaxKeySize);
 		if (message[0]) {
@@ -366,7 +366,7 @@ public:
 		if (!first() && n == 0) return true;
 		if (n == 0) return false;
 		int i;
-		void* k = new byte[nMaxKeySize];
+		byte* k = new byte[nMaxKeySize];
 		IKey::copy(k, curKey);
 		for (i = 1; i < n && next(); i++) {
 			if (IKey::compare(k, curKey) > 0) {
