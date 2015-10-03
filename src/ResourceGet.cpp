@@ -34,7 +34,7 @@ ResourceFile::get(const datFilePosType& offset, uint32& size)
 		delete cbuf;
 		if (r != LZO_E_OK || tsize != head.uncomp_size) {
 			delete buf;
-            char message[4096];
+            char message[1024];
             sprintf(message, "LZO decompression error on resource file data: %s", FileSystem::getName(dat));
 			throw io_error(message);
 		}
