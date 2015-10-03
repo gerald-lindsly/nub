@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nubcsPS", "..\nubcs\nubcsPS
 		{073052EB-9C86-40E9-A634-1E64CC348FEA} = {073052EB-9C86-40E9-A634-1E64CC348FEA}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_gen1000x16", "test_gen1000x16\test_gen1000x16.vcxproj", "{23396BAC-B822-4F1A-A58C-12FB333A7BDB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,16 @@ Global
 		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Release|Any CPU.ActiveCfg = Release|Win32
 		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Release|Mixed Platforms.ActiveCfg = Release|Win32
 		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Release|Win32.ActiveCfg = Release|Win32
+		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.Debug|Win32.Build.0 = Debug|Win32
+		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.Release|Any CPU.ActiveCfg = Release|Win32
+		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.Release|Win32.ActiveCfg = Release|Win32
+		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
