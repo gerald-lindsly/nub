@@ -5,9 +5,13 @@ ipch/
 *.vcxproj.user
 *.ncb
 *.sdf
+*.opensdf
 *.suo
 *.bsc
 *.lib
 *.pdb
 *.ilk
 test_ndx/test_ndx_d.exe
+test_ndx/ndx.txt
+test_ndx/test.ndx
+test_gen1000x16/test_nub.db
