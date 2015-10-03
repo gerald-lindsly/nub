@@ -6,7 +6,7 @@
 
 #include "_ResourceFile.h"
 
-template IndexT<IKeyASCIIZ, FileSystem, 1024, ResourceFile::ndxFilePosType, ResourceFile::datFilePosType>;
+//template IndexT<IKeyASCIIZ, FileSystem, 1024, ResourceFile::ndxFilePosType, ResourceFile::datFilePosType>;
 
 struct Init {
 	Init() { lzo_init(); }
@@ -16,7 +16,7 @@ struct Init {
 void
 ResourceFile::read(void* data, uint32 size, const datFilePosType& offset) // throw(...)
 {
-    char* op = 0;
+    const char* op = 0;
 	try {
 		if (offset != -1) {
 			op = "Seek";
@@ -38,7 +38,7 @@ ResourceFile::read(void* data, uint32 size, const datFilePosType& offset) // thr
 void
 ResourceFile::write(void* data, uint32 size, const datFilePosType& offset) // throw(...)
 {
-    char* op = 0;
+    const char* op = 0;
 	try {
 		if (offset != -1) {
 			op = "Seek";
@@ -58,7 +58,7 @@ ResourceFile::write(void* data, uint32 size, const datFilePosType& offset) // th
 
 
 bool
-ResourceFile::open(const char* filename, bool create) throw(...)
+ResourceFile::open(const char* filename, bool create) // throw(...)
 {
     char message[1024];
     bool err = false;
