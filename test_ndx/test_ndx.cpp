@@ -47,7 +47,7 @@ bool _kbhit(void)
   /* no characters were pending */
   return false;
 }
-#define getch() getchar()
+#define _getch() getchar()
 
 #else
 #include <conio.h>
@@ -63,7 +63,7 @@ Index ndx;
 void
 pret(int ret)
 {
-    printf("ret = %d, ckey = \"%s\", %u\n", ret, ndx.key(), ndx.offset());
+    printf("ret = %d, ckey = \"%s\", %u\n", ret, (const char*)ndx.key(), ndx.offset());
 }
 
 
@@ -87,13 +87,13 @@ addRandKey(int len)
 }
 
 
-void
+int
 main(int argc, char** argv)
 {
     FILE* outf;
     srand(2); // guarentee repeatable results
 
-	char* filename = defaultFilename;
+	const char* filename = defaultFilename;
 	if (argc > 1) filename = argv[1];
 
     if (outf = fopen(filename, "rb")) {
@@ -194,7 +194,7 @@ main(int argc, char** argv)
                 case 'L' :
                     if (ndx.first())
                         do
-                            printf("%s\n", ndx.key());
+                            printf("%s\n", (const char*)ndx.key());
                         while (ndx.next());
                     break;
                 case 'O' :
@@ -259,4 +259,5 @@ main(int argc, char** argv)
                     break;
             }
     }
+	return 0;
 }

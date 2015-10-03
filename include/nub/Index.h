@@ -283,7 +283,7 @@ public:
 	}
 
     /// Create new index
-	void create(char* name, bool _dups=false) // throw(...)  // can throw bad_alloc or io_error
+	void create(const char* name, bool _dups=false) // throw(...)  // can throw bad_alloc or io_error
 	{
 		if (f) FileSystemT::close(f);
 		resetCache();
@@ -305,7 +305,7 @@ public:
 	}
 
     /// Open existing index.  Returns false if file does not exist
-	bool open(char* name) // throw(...)  // can throw bad_alloc or io_error
+	bool open(const char* name) // throw(...)  // can throw bad_alloc or io_error
 	{
 		if (f) FileSystemT::close(f);
 		resetCache();
@@ -854,7 +854,7 @@ public:
 		{ return dups; }
 
     /// Debugging code to output the index tree
-	void print(char* filename) // throw(...)
+	void print(const char* filename) // throw(...)
 	{
 		FILE* outf = fopen(filename, "w");
 		_print(outf, root, 0);
