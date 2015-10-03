@@ -7,7 +7,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
                            src/Index.cpp src/ResourcePut.cpp src/imemstream.cpp
                            src/ResourceFile.cpp src/UniIndex.cpp)
 
-ELSE
+ELSE(CMAKE_COMPILER_IS_GNUCXX)
 	add_library (nub STATIC src/FileSystem.cpp src/ResourceGet.cpp  
 	                        src/Index.cpp src/ResourcePut.cpp src/imemstream.cpp
 	                        src/ResourceFile.cpp src/UniIndex.cpp src/istreamBMP.cpp)
