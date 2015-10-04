@@ -10,7 +10,7 @@
 
 struct Init {
 	Init() { lzo_init(); }
-} _init;
+} ResourceFile_init;
 
 
 void
