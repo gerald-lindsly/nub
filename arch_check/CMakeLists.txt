@@ -1,0 +1,1 @@
+add_executable (arch_check arch_check.cpp)
