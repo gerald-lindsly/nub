@@ -76,7 +76,7 @@ private:
 	{
 		FileHandle fh = new FileInfo;
 		fh->f = f;
-		int len = strlen(name) + 1;
+		size_t len = strlen(name) + 1;
 		if (!(fh->name = (char*) malloc(len))) {
 			fclose(f);
 			delete fh;

@@ -42,8 +42,8 @@ ResourceFile::put(void* data, uint32 size)
 #endif
 
 	if (comp_size < size) {
-		usedHead.comp_size = comp_size;
-		size = comp_size; // set size of block to search for
+		usedHead.comp_size = (uint32)comp_size;
+		size = (uint32)comp_size; // set size of block to search for
 		data = comp;  // use compressed data
 	} else // unable to compress
 		usedHead.comp_size = 0;

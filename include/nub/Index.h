@@ -300,7 +300,8 @@ public:
 		freelist = 0;
 		n = 0;
 		dups = _dups;
-		write(0, &major, FIELDOFFSET(IndexT, stacktop) - FIELDOFFSET(IndexT, major));  // Write virgin file header
+		// write(0, &major, FIELDOFFSET(IndexT, stacktop) - FIELDOFFSET(IndexT, major));  // Write virgin file header
+		write(0, &major, nNodeSize); 
 		newNode();
 	}
 
