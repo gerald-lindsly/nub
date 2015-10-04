@@ -17,6 +17,7 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 include_directories (include)
 
+add_subdirectory (arch_check)
 add_subdirectory (test_ndx)
 add_subdirectory (test_res)
 add_subdirectory (test_gen1000x16)
