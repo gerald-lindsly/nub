@@ -1084,6 +1084,7 @@ protected:
 			*w++ = w[1] + size;
 			j--;
 		}
+		uint16 y = node->keyofs[-1];
 		memcpy(k->key, curKey, size - FIELDOFFSET(KeyEntry, key));
 //		KeyEntry* q = (KeyEntry*)((byte*)k + size);
 		k->lson = 0;
