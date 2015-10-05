@@ -226,7 +226,8 @@ protected:
 			j = ++parent->count;
 			w = parent->keyofs - j;
 			while (j > parenti) {
-				*w++ = w[1] + pivotlen;
+				*w = w[1] + pivotlen;
+				w++;
 				j--;
 			}
 			// put the pivot in the parent
@@ -1080,7 +1081,6 @@ protected:
 		memmove((byte*)k + size, k,
 			node->keyofs[-node->count] - ((byte*)k - (byte*)node) + sizeof(ndxFilePosT));
 
-		ndxFilePosT x = m->lson;
 		// adjust the keyofs's
 		j = ++node->count;
 		uint16* w = node->keyofs - j;
@@ -1089,7 +1089,6 @@ protected:
 			w++;
 			j--;
 		}
-		uint16 y = node->keyofs[-1];
 		memcpy(k->key, curKey, size - FIELDOFFSET(KeyEntry, key));
 //		KeyEntry* q = (KeyEntry*)((byte*)k + size);
 		k->lson = 0;
