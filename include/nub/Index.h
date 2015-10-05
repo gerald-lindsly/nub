@@ -911,12 +911,6 @@ protected:
 		cacheUsed = 0;
 	}
 
-	/// seek to specified offset in index file
-	void seek(const ndxFilePosT& offset) // throw(...)  // can throw io_error
-	{
-		FileSystemT::seek(f, offset);
-	}
-
     /// Read header or node
 	void read(const ndxFilePosT& offset, void* buffer, uint16 size) // throw(...)  // can throw io_error
 	{
@@ -1078,9 +1072,11 @@ protected:
 		}
 
 		// make room for key in the node
+		KeyEntry* m = (KeyEntry*)((byte*)k + size);
 		memmove((byte*)k + size, k,
 			node->keyofs[-node->count] - ((byte*)k - (byte*)node) + sizeof(ndxFilePosT));
 
+		ndxFilePosT x = m->lson;
 		// adjust the keyofs's
 		j = ++node->count;
 		uint16* w = node->keyofs - j;
