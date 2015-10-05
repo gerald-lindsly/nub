@@ -501,8 +501,8 @@ public:
 			memmove(k, (byte*)k + klen,
 					node->keyofs[-node->count] - moveo + sizeof(ndxFilePosT));
 			uint16* w = node->keyofs - i - 1;
-			for (j = i + 1; j < node->count; j++)
-				*w-- = w[-1] - klen;
+			for (j = i + 1; j < node->count; j++, w--)
+				*w = w[-1] - klen;
 			node->dirty = true;
 			if (!--node->count && stacktop) {
 				ndxFilePosT son = k->lson;
