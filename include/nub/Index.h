@@ -1085,7 +1085,8 @@ protected:
 		j = ++node->count;
 		uint16* w = node->keyofs - j;
 		while (j > i) {
-			*w++ = w[1] + size;
+			*w = w[1] + size;
+			w++;
 			j--;
 		}
 		uint16 y = node->keyofs[-1];
