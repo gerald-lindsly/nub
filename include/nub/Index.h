@@ -300,8 +300,10 @@ public:
 		freelist = 0;
 		n = 0;
 		dups = _dups;
-		// write(0, &major, FIELDOFFSET(IndexT, stacktop) - FIELDOFFSET(IndexT, major));  // Write virgin file header
-		write(0, &major, nNodeSize); 
+		const int cHeaderSize = FIELDOFFSET(IndexT, stacktop) - FIELDOFFSET(IndexT, major);
+		write(0, &major, cHeaderSize);  // Write virgin file header
+		Node* temp = cache[0];
+		write(0, temp, nNodeSize - cHeaderSize); 
 		newNode();
 	}
 
@@ -314,7 +316,8 @@ public:
 
 		f = FileSystemT::open(name);
 		if (!f) return 0;
-		read(0, &major, FIELDOFFSET(IndexT, stacktop) - FIELDOFFSET(IndexT, major));     // Read the index file header
+		const int cHeaderSize = FIELDOFFSET(IndexT, stacktop) - FIELDOFFSET(IndexT, major);
+		read(0, &major, cHeaderSize);     // Read the index file header
 		char message[1024] = "";
 		if (major != ndxMAJOR)
 			sprintf(message, "Index file major version number is not the expected %d, but %d. %s", ndxMAJOR, major, name);
@@ -346,7 +349,8 @@ public:
 				if (node->dirty)
 					write(node->offset, node, nNodeSize);
 			}
-			write(0, &major, FIELDOFFSET(IndexT, stacktop) - FIELDOFFSET(IndexT, major));
+			const int cHeaderSize = FIELDOFFSET(IndexT, stacktop) - FIELDOFFSET(IndexT, major);
+			write(0, &major, cHeaderSize);
 			FileSystemT::close(f);
 			f = 0;
 			n = 0;
