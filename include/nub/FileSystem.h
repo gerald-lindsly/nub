@@ -76,6 +76,7 @@ private:
 	{
 		FileHandle fh = new FileInfo;
 		fh->f = f;
+		setbuf(f, 0);
 		size_t len = strlen(name) + 1;
 		if (!(fh->name = (char*) malloc(len))) {
 			fclose(f);

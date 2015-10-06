@@ -91,10 +91,10 @@ ResourceFile::put(void* data, uint32 size)
         }
 		usedHead.size = size + sizeof(UsedHeader);
 		offset = filesize;
+		filesize += sizeof(UsedHeader) + size;
 	}
 	write(&usedHead, sizeof(UsedHeader), offset);
 	write(data, size);
-	filesize += sizeof(UsedHeader) + size;
 	delete comp;
 	if (!preallocated) postCompress();
 	return offset;
