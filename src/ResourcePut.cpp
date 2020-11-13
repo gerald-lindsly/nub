@@ -106,7 +106,9 @@ ResourceFile::put(const char* name, void* data, uint32 size)
 {
 	datFilePosType offset;
 	if (ndx.find(name)) {
-		remove(ndx.offset());
+		void* key = NULL;
+		ndx.getCurKey(key, offset);
+		remove(offset);
 		offset = put(data, size);
 		ndx.change(offset);
 	} else {

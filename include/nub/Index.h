@@ -1,5 +1,5 @@
 /*  <nub/Index.h> -- Header file for manipulating index files
-    Copyright (c) 2005-2015 by Gerald Lindsly
+    Copyright (c) 2005-2020 by Gerald Lindsly
 
     See <nub/Platform.h> for additional copyright information
 
@@ -11,16 +11,6 @@
     and bug fixes that this code is generally unrecognizable when compared to the original.
 
 */
-/*	<BD-Calvin> Gero: fixed __int64 in Platform.h, removed all exception specifications, 
-		compiled with -fpermissive (const correctness issues), changed an fsetpos to fseek.
-
-	<TinoDidriksen> You don't need COM for C# - you can call native code with P/Invoke.
-	
-	<BD-Calvin> http://symas.com/mdb/
-<BD-Calvin> https://github.com/google/leveldb
-<BD-Calvin> bdb, rocksdb, even sqlite
-*/
-
 #ifndef __NUB_INDEX_H__
 #define __NUB_INDEX_H__
 
@@ -53,10 +43,9 @@ const int  ndxMaxStack = 64;  // Maximum tree height
 #define FIELDOFFSET(type, field) (offsetof(type, field))
 
 
-class IKeyASCIIZ
+struct IKeyASCIIZ
 // also works to some degree for UTF-8, but the sorting order may be off
 {
-public:
 	static int size(const void* key)
 		{ return (int)strlen((char*)key) + 1; }
 
@@ -74,9 +63,8 @@ public:
 };
 
 
-class IKeyUTF16 // Unicode keys
+struct IKeyUTF16 // Unicode keys
 {
-public:
 	static int size(const void* key)
 	{
 		const wchar_t* eos = (const wchar_t*)key;
@@ -99,23 +87,22 @@ public:
 };
 
 
-template <class    IKey        = IKeyASCIIZ,
-          typename FileSystemT = FileSystem,
-          int      nNodeSize   = 512,
-		  typename ndxFilePosT = uint32,
-		  typename datFilePosT = uint32>
-class IndexT
+template <class    IKey          = IKeyASCIIZ,
+          typename FileSystemT   = FileSystem,
+          unsigned int nNodeSize = 4096,
+		  typename ndxFilePosT   = uint32,
+		  typename datFilePosT   = uint32>
+struct IndexT
 {
-public:
-	typedef IKey        IKeyType;
-	typedef FileSystemT FileSystemType;
-	typedef ndxFilePosT ndxFilePosType;
-	typedef datFilePosT datFilePosType;
+	typedef IKey         IKeyType;
+	typedef FileSystemT  FileSystemType;
+	typedef ndxFilePosT  ndxFilePosType;
+	typedef datFilePosT  datFilePosType;
+	typedef uint16       nodeLookupType;
 
 protected:
-	class KeyEntry
+	struct KeyEntry
 	{
-	public:
 		ndxFilePosT lson;   // Pointer to left son (seek address in file)
 		datFilePosT offset; // Record seek address or number associated with key
 		byte        key[1]; // the actual key
@@ -132,9 +119,8 @@ protected:
 		    }
 	};
 
-	class Node
+	struct Node
 	{
-	public:
 		int32 count;       // # of keys in node
 		union {
 			ndxFilePosT lson;  // left son node offset in index file
@@ -147,16 +133,16 @@ protected:
 
 		// only the above data is stored on disk
 
-		uint16 keyofs[1];  // Offset of keys from the beginning of the node
+		nodeLookupType keyofs[1];  // Offset of keys from the beginning of the node
 						   // note: this array is accessed with negative indices
 						   // to access the offsets of keys within the node.
 						   // The key data grows upwards while the offsets to the keys grows downwards
 						   // [0] is not stored in the node on disk (always FIELDOFFSET(Node,Key0))
 
-		byte     filler[sizeof(ndxFilePosT)-sizeof(uint16)];  // align following offset
+//		byte           filler[sizeof(int)-sizeof(nodeLookupType)];  // align following offset
 
-		ndxFilePosT offset; // Node offset within the index file
-		bool     dirty;     // true if node has been modified and needs to be written to disk
+		ndxFilePosT    offset; // Node offset within the index file
+		bool           dirty;     // true if node has been modified and needs to be written to disk
 
 		/// get pointer to Ith key
 		KeyEntry* keyI(int i) { return (KeyEntry*)((byte*)this + keyofs[-i]); }
@@ -168,8 +154,9 @@ protected:
 		int	split(IndexT* ndx) // throw(...)
 		{
 			// Find entry to be moved up a level
-			uint16 endkeys = keyofs[-count];
-			uint16 m = (endkeys - (uint16)FIELDOFFSET(Node, key0)) / 2 + (uint16)FIELDOFFSET(Node, key0); // peek into the middle of the keys
+			nodeLookupType endkeys = keyofs[-count];
+			nodeLookupType m = (endkeys - (nodeLookupType)FIELDOFFSET(Node, key0)) / 2 + 
+				               (nodeLookupType)FIELDOFFSET(Node, key0); // peek into the middle of the keys
 			// (m points somewhere in the middle of the key to use for a pivot)
 			// find 1st key past pivot
 			int i;
@@ -177,9 +164,9 @@ protected:
 				if (keyofs[-i] >= m)
 					break;
 			// i was incremented 1 past pivot key
-			uint16 pivoto = keyofs[1-i];
-			uint16 moveo  = keyofs[-i]; // moveo is offset of keys to move to new node
-			uint16 pivotlen = moveo - pivoto;
+			nodeLookupType pivoto = keyofs[1-i];
+			nodeLookupType moveo  = keyofs[-i]; // moveo is offset of keys to move to new node
+			nodeLookupType pivotlen = moveo - pivoto;
 
 			Node*     parent;
 			KeyEntry* parentk;
@@ -187,11 +174,11 @@ protected:
 			if (ndx->stacktop) {
 			// If parent full, split it, then we will be back
 				parent = ndx->pop(parentk, parenti);
-				if (pivotlen +                       // the pivot to put in parent
-					sizeof(uint16) +				 // pivot's keyofs for parent
-					parent->keyofs[-parent->count] + // parent's key data
-					parent->count * sizeof(uint16) + // & keyofs's
-					sizeof(ndxFilePosT) >            // rson
+				if (pivotlen +                               // the pivot to put in parent
+					sizeof(nodeLookupType) +				 // pivot's keyofs for parent
+					parent->keyofs[-parent->count] +         // parent's key data
+					parent->count * sizeof(nodeLookupType) + // & keyofs's
+					sizeof(ndxFilePosT) >                    // rson
 					   nNodeSize)
 				{
 					parent->split(ndx);
@@ -210,10 +197,10 @@ protected:
 			memcpy(&added->key0, (byte*)this + moveo, endkeys - moveo + sizeof(ndxFilePosT));
 
 			// set the key offsets within the added node
-			moveo -= (uint16)FIELDOFFSET(Node, key0);
+			moveo -= (nodeLookupType)FIELDOFFSET(Node, key0);
 			int j = i + 1;
-			uint16* w = added->keyofs - 1;
-			uint16* w1 = keyofs - j;
+			nodeLookupType* w = added->keyofs - 1;
+			nodeLookupType* w1 = keyofs - j;
 			for (; j <= count; j++)
 				*w-- = *w1-- - moveo;
 			added->count = count - i;
@@ -240,11 +227,10 @@ protected:
 		}
 	};
 
-	class StackFrame // State stack frame
+	struct StackFrame // State stack frame
 	{
-	public:
-		ndxFilePosT offset;    // offset of node in the index file
-		int i;            // # of key in the node
+		ndxFilePosT offset;  // offset of node in the index file
+		int i;               // # of key in the node
 	};
 
 public:
@@ -252,16 +238,15 @@ public:
 	IndexT(int maxCache=10) : // throw(...) :   // can throw bad_alloc
 		f(0), cacheUsed(0), stacktop(0), n(0), nMaxCache(maxCache)
 	{
-		const int cNodeExtra  = sizeof(int32)        // Overhead per node: count &
-							  + sizeof(ndxFilePosT); // rson
-		const int cMaxKeyData = nNodeSize            // Maximum key data in a node
+		const int cNodeExtra  = sizeof(int32)           // Overhead per node: count &
+							  + sizeof(ndxFilePosT);    // rson
+		const int cMaxKeyData = nNodeSize               // Maximum key data in a node
 							  - cNodeExtra; 
-		const int cKeyExtra   = sizeof(ndxFilePosT)  // lson
-							  + sizeof(datFilePosT)  // offset
-							  + sizeof(uint16);      // keyofs
+		const int cKeyExtra   = sizeof(ndxFilePosT)     // lson
+							  + sizeof(datFilePosT)     // offset
+							  + sizeof(nodeLookupType); // keyofs
 		// need room for at least 3 keys in a node so split() will work
 		nMaxKeySize = cMaxKeyData/3 - cKeyExtra;
-		curKey = new byte[nMaxKeySize];
 		clearCurKey();
 		cache = new Node*[maxCache];
 		Node** c = cache;
@@ -269,7 +254,7 @@ public:
 		for (int i = 0; i < nMaxCache; i++) {
 			node = new Node;
 			*c++ = node;
-			node->keyofs[0] = (uint16)FIELDOFFSET(Node, key0);
+			node->keyofs[0] = (nodeLookupType)FIELDOFFSET(Node, key0);
 		}
 	}
 
@@ -301,10 +286,11 @@ public:
 		freelist = 0;
 		n = 0;
 		dups = _dups;
+		clearCurKey();
 		const int cHeaderSize = FIELDOFFSET(IndexT, stacktop) - FIELDOFFSET(IndexT, major);
-		write(0, &major, cHeaderSize);  // Write virgin file header
 		Node* temp = cache[0];
-		write(0, temp, nNodeSize - cHeaderSize); 
+		memcpy(temp, &major, cHeaderSize);  // Write virgin file header
+		write(0, temp, nNodeSize);
 		newNode();
 	}
 
@@ -316,8 +302,9 @@ public:
 		stacktop = 0;
 
 		f = FileSystemT::open(name);
-		if (!f) return 0;
+		if (!f) return false;
 		const int cHeaderSize = FIELDOFFSET(IndexT, stacktop) - FIELDOFFSET(IndexT, major);
+		clearCurKey();
 		read(0, &major, cHeaderSize);     // Read the index file header
 		char message[1024] = "";
 		if (major != ndxMAJOR)
@@ -355,61 +342,70 @@ public:
 			FileSystemT::close(f);
 			f = 0;
 			n = 0;
+			clearCurKey();
 		}
 	}
 
-    /// Return file size (# of keys)
+	/// Return file size (# of keys)
 	int count() const // noexcept // throw()
 		{ return n; }
 	const int maxKeySize() const // noexcept // throw ()
 		{ return nMaxKeySize; }
 
+	/// Retrieve parameters of the current key and data offset
+	bool getCurKey(void* &key, datFilePosT& offset)
+	{
+		if (f == 0 || curNode == 0) return false;
+		Node* node = getNode(curNode);
+		KeyEntry* ke = node->keyI(curI);
+		key = (void*)&ke->key;
+		offset = ke->offset;
+		return true;
+	}
 
-    /// Test index validity (true if valid)
+	/// Test index validity (true if valid)
 	bool valid() // throw(...)
 	{
 		if (!f) return false;
 		if (!first() && n == 0) return true;
 		if (n == 0) return false;
 		int i;
-		byte* k = new byte[nMaxKeySize];
-		IKey::copy(k, curKey);
+		byte* kk = NULL, *k = new byte[nMaxKeySize];
+		datFilePosT offset;
+		getCurKey((void*&)kk, offset);
+		IKey::copy(k, kk);
 		for (i = 1; i < n && next(); i++) {
-			if (IKey::compare(k, curKey) > 0) {
+			getCurKey((void*&)kk, offset);
+			if (IKey::compare(k, kk) > 0) {
 				delete[] k;
 				return false;
 			}
-			IKey::copy(k, curKey);
+
+			IKey::copy(k, kk);
 		}
 		delete[] k;
    		return i == n && !next();
 	}
-
-    /// Return current key (and data offset)
-	const void* key() const // noexcept // throw()
-		{ return curKey; }
-	datFilePosT offset() const // noexept // throw()
-		{ return curOffset; }
 
     /// Insert a new key (and data offset).  Can return false if key already exists and no duplicates allowed
 	bool insert(const void* key, const datFilePosT& offset) // throw(...)  // can throw io_error, runtime_error or ivalid_argument (key too long)
 	{
 		if (!f) return false;
 
-		uint16 size = IKey::size(key);
-		if (size > nMaxKeySize) {
+		paramSize = IKey::size(key);
+		if (paramSize > nMaxKeySize) {
 			char message[4096];
 			sprintf(message, "Key (%s) too long (must be <= %d bytes)", IKey::toString(key), nMaxKeySize);
 			throw invalid_argument(message);
 		}
-		memcpy(curKey, key, size);
-		size += (uint16)(FIELDOFFSET(KeyEntry, key));
-		curOffset = offset;
+		paramSize += (uint16)(FIELDOFFSET(KeyEntry, key));
+		paramOfs = offset;
+		paramKey = (void*)key;
 
 		int result;
 		do {
 			stacktop = 0;
-			result = _insert(size, root);
+			result = _insert(root);
 		} while (result < 0);
 
 		if (result) n++;
@@ -429,7 +425,10 @@ public:
 		} else {
 			_find(key, ((datFilePosT)-1 >> 1) + 1, root);  // should be 0x80000000 for int32 (most negative number)
 			_findNext();
-			return IKey::compare(key, curKey) == 0;
+			void* k = NULL;
+			datFilePosT ofs;
+			getCurKey(k, ofs);
+			return IKey::compare(key, k) == 0;
 		}
 	}
 
@@ -443,7 +442,10 @@ public:
 			ret = _find(key, offset, root);    // Inner routine
 		else {
 			ret = _find(key, root);
-			if (ret && offset != curOffset)
+			void* k = NULL;
+			datFilePosT ofs;
+			getCurKey(k, ofs);
+			if (ret && offset != ofs)
 				ret = false; 
 		}
 		if (!ret) _findNext();
@@ -462,7 +464,8 @@ public:
 		KeyEntry* k;
 		int i;
 		Node* node = top(k, i);
-		curOffset = k->offset = offset;
+		k->offset = offset;
+		setCurKey(node, i);
 		node->dirty = true;
 		return true;
 	}
@@ -490,17 +493,18 @@ public:
 		if (!f) return false;
 		if (!stacktop) return false;
 
-		KeyEntry* k;
-		int       ttop = stacktop;
-		int       i, j, moveo;
+		KeyEntry*      k;
+		int            ttop = stacktop;
+		int            i, j;
+		nodeLookupType moveo;
 
 		Node* node = pop(k, i);
 		if (i == node->count) return false;
-		int klen = (moveo = node->keyofs[-i-1]) - node->keyofs[-i];
+		nodeLookupType klen = (moveo = node->keyofs[-i-1]) - node->keyofs[-i];
 		if (!k->lson) {              // Key is simply deleted
 			memmove(k, (byte*)k + klen,
 					node->keyofs[-node->count] - moveo + sizeof(ndxFilePosT));
-			uint16* w = node->keyofs - i - 1;
+			nodeLookupType* w = node->keyofs - i - 1;
 			for (j = i + 1; j < node->count; j++, w--)
 				*w = w[-1] - klen;
 			node->dirty = true;
@@ -519,18 +523,18 @@ public:
 			// just deleted a key -- see if we can combine sibling nodes
 			if (stacktop) {
 				moveo = node->keyofs[-node->count];
-				int nodeSize = moveo + // node key data
-						       sizeof(ndxFilePosT) +        // rson
-				               node->count * sizeof(uint16);// keyofs's
+				nodeLookupType nodeSize = moveo +                       // node key data
+						                  sizeof(ndxFilePosT) +         // rson
+				                          node->count * sizeof(uint16); // keyofs's
 				if (nodeSize <= nNodeSize/2) {
 					KeyEntry* pk;
 					Node* parent = top(pk, j);
 					if (j < parent->count) {
-					    int pkSize = parent->keyofs[-j-1] - parent->keyofs[-j];
+					    nodeLookupType pkSize = parent->keyofs[-j-1] - parent->keyofs[-j];
 						KeyEntry* q = (KeyEntry*)((byte*)pk + pkSize);
 						if (q->lson) { // if parent key has a right child
 							Node* rsib = getNode(q->lson);
-							int rsibSize = rsib->keyofs[-rsib->count];
+							nodeLookupType rsibSize = rsib->keyofs[-rsib->count];
 							if (nodeSize + pkSize + sizeof(uint16) +
 								rsibSize - FIELDOFFSET(Node, key0) +
 								rsib->count * sizeof(uint16)
@@ -539,15 +543,15 @@ public:
 								// leave rson of node alone (will be lson of new parent key)
 								memcpy((byte*)node + moveo + sizeof(ndxFilePosT),
 									   &pk->offset, pkSize - sizeof(ndxFilePosT));
-								uint16* w = &node->keyofs[-(node->count+1)];
-								uint16  y;
+								nodeLookupType* w = &node->keyofs[-(node->count+1)];
+								nodeLookupType  y;
 								*w-- = y = moveo + pkSize;
 
 								// put rsib keys after parent key
 								memcpy((byte*)node + moveo + pkSize,
 									   &rsib->key0,
 									   rsibSize - FIELDOFFSET(Node, key0) + sizeof(ndxFilePosT));
-								uint16* x = &rsib->keyofs[-1];
+								nodeLookupType* x = &rsib->keyofs[-1];
 								y -= FIELDOFFSET(Node, key0);
 								for (int r = 0; r < rsib->count; r++)
 									*w-- = *x-- + y;
@@ -584,26 +588,26 @@ public:
 					if (stacktop && j > 0) {
 						pk = parent->keyI(--j);
 						if (pk->lson) {
-							int pkSize = parent->keyofs[-j-1] - parent->keyofs[-j];
+							nodeLookupType pkSize = parent->keyofs[-j-1] - parent->keyofs[-j];
 							Node* lsib = getNode(pk->lson);
-							int lsibSize = lsib->keyofs[-lsib->count];
-							if (lsibSize + lsib->count * sizeof(uint16) +
-								pkSize + sizeof(uint16) +
+							nodeLookupType lsibSize = lsib->keyofs[-lsib->count];
+							if (lsibSize + lsib->count * sizeof(nodeLookupType) +
+								pkSize + sizeof(nodeLookupType) +
 								nodeSize - FIELDOFFSET(Node, key0) 
 								<= nNodeSize)
 							{	// move parent key to end of lsib
 								// leave rson of lsib alone (will be lson of new parent key)
 								memcpy((byte*)lsib + lsibSize + sizeof(ndxFilePosT),
 									   &pk->offset, pkSize - sizeof(ndxFilePosT));
-								uint16* w = &lsib->keyofs[-(lsib->count+1)];
-								uint16  y;
+								nodeLookupType* w = &lsib->keyofs[-(lsib->count+1)];
+								nodeLookupType  y;
 								*w-- = y = lsibSize + pkSize;
 
 								// put rsib keys in lsib after parent key
 								memcpy((byte*)lsib + lsibSize + pkSize,
 									   &node->key0,
 									   moveo - FIELDOFFSET(Node, key0) + sizeof(ndxFilePosT));
-								uint16* x = &node->keyofs[-1];
+								nodeLookupType* x = &node->keyofs[-1];
 								y -= FIELDOFFSET(Node, key0);
 								for (int r = 0; r < node->count; r++)
 									*w-- = *x-- + y;
@@ -673,7 +677,7 @@ public:
 			i--;
 			k = node->keyI(i);
 			// need only the offset and key
-			int tlen = node->keyofs[-1-i] - node->keyofs[-i];
+			nodeLookupType tlen = node->keyofs[-1-i] - node->keyofs[-i];
 			KeyEntry* tkey = (KeyEntry*) new byte[tlen];
 			memcpy(tkey, k, tlen);
 			node->dirty = true;
@@ -688,25 +692,30 @@ public:
 			node = pop(k, i);
 			int lendiff = tlen - klen;
 			/* Substitute tkey for key being deleted */
-			while (lendiff +                      // length difference between keys
-				   node->keyofs[-node->count] +   // key data
-				   sizeof(ndxFilePosT) +          // rson
-				   + node->count * sizeof(uint16) // keyofs's
+			while (lendiff +                              // length difference between keys
+				   node->keyofs[-node->count] +           // key data
+				   sizeof(ndxFilePosT) +                  // rson
+				   + node->count * sizeof(nodeLookupType) // keyofs's
 					   > nNodeSize)
 			{
 				int ret;
+				void* kk = (void*)new byte[nMaxKeySize];
+				datFilePosT ofs;
+				getCurKey(kk, ofs);
+				IKeyType::copy((void*)k, (const void*)kk);
 				do {
 					ret = node->split(this);
-					find(curKey, curOffset);
+					find(kk, ofs);
 					node = pop(k, i);
 				} while (ret == -1);
+				delete[] kk;
 			}
 			tkey->lson = k->lson; // Preserve the original lson
 			if (lendiff) {
 				memmove((byte*)k + tlen, (byte*)k + klen,
 						node->keyofs[-node->count] - node->keyofs[-1-i] + sizeof(ndxFilePosT));
 				j = i + 1;
-				uint16* w = node->keyofs - j;
+				nodeLookupType* w = node->keyofs - j;
 				while (j <= node->count) {
 					*w-- += lendiff;
 					j++;
@@ -730,6 +739,7 @@ public:
 				push(node, i);
 			} else {
 				push(node, i);
+				i = 0;
 				while (k->lson) {            // Get lowest left son, if any
 					node = getNode(k->lson);
 					k = &node->key0;
@@ -737,9 +747,7 @@ public:
 				}
 			}
 		}
-		// new current key
-		IKey::copy(curKey, k->key);
-		curOffset = k->offset;
+		setCurKey(node, i);
 		n--;
 		return true;
 	}
@@ -760,8 +768,7 @@ public:
 				break;
 			node = getNode(k->lson);
 		}
-		IKey::copy(curKey, k->key);
-		curOffset = k->offset;
+		setCurKey(node, 0);
 		return true;
 	}
 
@@ -784,8 +791,7 @@ public:
 		};
 		k = node->keyI(--i);
 		push(node, i);
-		IKey::copy(curKey, k->key);
-		curOffset = k->offset;
+		setCurKey(node, i);
 		return true;
 	}
 
@@ -821,8 +827,7 @@ public:
 			}
 
 		push(node, i);
-		IKey::copy(curKey, k->key);
-		curOffset = k->offset;
+		setCurKey(node, i);
 		return true;
 	}
 
@@ -850,8 +855,7 @@ public:
 		i--;
 		k = node->keyI(i);
 		push(node, i);
-		IKey::copy(curKey, k->key);
-		curOffset = k->offset;
+		setCurKey(node, i);
 		return true;
 	}
 
@@ -868,43 +872,53 @@ public:
 	}
 
 protected:
-	byte        major;        // Version number
-	byte        minor;
-	byte        hNdxPosSize;  // stored index file offset size
-	byte        hDatPosSize;  // stored data file offset size
-    uint16      hNodeSize;    // Stored nNodeSize for open() sanity check
-	uint16      hMaxKeySize;  // Stored for sanity check
+	byte           major;        // Version number
+	byte           minor;
+	byte           hNdxPosSize;  // stored index file offset size
+	byte           hDatPosSize;  // stored data file offset size
+    nodeLookupType hNodeSize;    // Stored nNodeSize for open() sanity check
+	nodeLookupType hMaxKeySize;  // Stored for sanity check
 
-	ndxFilePosT root;         // File offset of the root node
-	ndxFilePosT eof;          // File offset of the end of file
-	ndxFilePosT freelist;	  // File offset of free node list
-	int32       n;			  // File size (# keys, that is)
+	ndxFilePosT    root;         // File offset of the root node
+	ndxFilePosT    eof;          // File offset of the end of file
+	ndxFilePosT    freelist;	  // File offset of free node list
+	int32          n;			  // File size (# keys, that is)
 
-	bool        dups;         // index allows duplicate keys
+	bool           dups;         // index allows duplicate keys
 
-	byte        filler[3];    // align stacktop
+	byte           filler[3];    // align stacktop
 
 	/// Fields above stacktop are stored in the index header
 
-	int         stacktop;            // Current stack top index
-	StackFrame  stack[ndxMaxStack];  // Current state
+	int            stacktop;            // Current stack top index
+	StackFrame     stack[ndxMaxStack];  // Current state
 
 	FileSystem::FileHandle f;        // Index file handle
 
-	Node**      cache;     // The node cache
-	int         cacheUsed; // number of used cache nodes
-	int         nMaxCache; // max cache nodes
+	Node**         cache;     // The node cache
+	int            cacheUsed; // number of used cache nodes
+	int            nMaxCache; // max cache nodes
 
-	int         ckeyno;    // number of ckey in the index; only maintained during pack
-	void*       curKey;
-	datFilePosT curOffset;
+	ndxFilePosT    curNode;   // the current key's node
+	int            curI;      // the current key's # with node
 
-	int  	    nMaxKeySize;  // calculated
+	void*          paramKey;  // saved parameters for insert, _insert, and remove_current
+	datFilePosT    paramOfs; // to avoid passing redundant values on the stack
+	int            paramSize;
+
+	int  	       nMaxKeySize;  // calculated
+
+	// set the current key and datafile offset for retrieval by getCurKey
+	void setCurKey(Node* node, int i)
+	{
+		curNode = node->offset;
+		curI = i;
+	}
 
 	void clearCurKey()
 	{
-		memcpy(curKey, IKey::emptyKey(), IKey::emptyKeySize());
-		curOffset = 0;
+		curNode = 0;
+		//curI = 0;
 	}
 
 	/// reset the cache.  used by open() and create()
@@ -1034,7 +1048,7 @@ protected:
 	}
 
 	// Inner insert
-	int	_insert(int size, const ndxFilePosT& root) // throw(...)
+	int	_insert(const ndxFilePosT& root) // throw(...)
 	{
 		Node* node = getNode(root);
 		KeyEntry* k;
@@ -1043,33 +1057,35 @@ protected:
 		while (j > i) {
 			int m = (i + j) / 2;
 			k = node->keyI(m);
-			int cmp = IKey::compare(curKey, k->key);
+			int cmp = IKey::compare(paramKey, k->key);
 			if (cmp < 0)
 				j = m;
 			else if (cmp > 0)
 				i = m + 1;
 			else if (!dups) {
 				push(node, m);
+				setCurKey(node, m);
 				return false;
-			} else if (curOffset < k->offset)
+			} else if (paramOfs < k->offset)
 				j = m;
-			else if (curOffset > k->offset)
+			else if (paramOfs > k->offset)
 				i = m + 1;
 			else {
 				push(node, m);
+				setCurKey(node, m);
 				return false;
 			}
 		}
 		k = node->keyI(i);
 		if (k->lson) {                /* Recurse */
 			push(node, i);
-			return _insert(size, k->lson);
+			return _insert(k->lson);
 		}
 
-		if (size + sizeof(uint16) +         // new KeyEntry & it's keyofs
+		if (paramSize + sizeof(nodeLookupType) + // new KeyEntry & it's keyofs
 			node->keyofs[-node->count] +    // node->count & current key data
 			sizeof(ndxFilePosT) +           // rson
-			node->count * sizeof(uint16) >  // current keyofs's 
+			node->count * sizeof(nodeLookupType) >  // current keyofs's 
 			nNodeSize) {
 			// Node full, so split
 			node->split(this);
@@ -1077,24 +1093,25 @@ protected:
 		}
 
 		// make room for key in the node
-		KeyEntry* m = (KeyEntry*)((byte*)k + size);
-		memmove((byte*)k + size, k,
+		KeyEntry* m = (KeyEntry*)((byte*)k + paramSize);
+		memmove((byte*)k + paramSize, k,
 			node->keyofs[-node->count] - ((byte*)k - (byte*)node) + sizeof(ndxFilePosT));
 
 		// adjust the keyofs's
 		j = ++node->count;
-		uint16* w = node->keyofs - j;
+		nodeLookupType* w = node->keyofs - j;
 		while (j > i) {
-			*w = w[1] + size;
+			*w = w[1] + paramSize;
 			w++;
 			j--;
 		}
-		memcpy(k->key, curKey, size - FIELDOFFSET(KeyEntry, key));
+		memcpy(k->key, paramKey, paramSize - FIELDOFFSET(KeyEntry, key));
 //		KeyEntry* q = (KeyEntry*)((byte*)k + size);
 		k->lson = 0;
-		k->offset = curOffset;
+		k->offset = paramOfs;
 		node->dirty = true;
 		push(node, i);
+		setCurKey(node, i);
 		return true;
 	}
 
@@ -1102,7 +1119,7 @@ protected:
 	bool _find(const void* key, const ndxFilePosT& root) // throw(...)
 	{
 		Node* node = getNode(root);
-		KeyEntry* k = &node->key0;
+		KeyEntry* k; // = &node->key0;
 		int i = 0;
 		int j = node->count;
 		while (j > i) {
@@ -1115,8 +1132,7 @@ protected:
 				i = m + 1;
 			else {
 				push(node, m);
-				IKey::copy(curKey, k->key);
-				curOffset = k->offset;
+				setCurKey(node, m);
 				return true;
 			}
 		}
@@ -1150,8 +1166,7 @@ protected:
 				i = m + 1;
 			else {
 				push(node, m);
-				IKey::copy(curKey, k->key);
-				curOffset = k->offset;
+				setCurKey(node, m);
 				return true;
 			}
 		}
@@ -1177,8 +1192,7 @@ protected:
 				return;
 			}
 		stacktop++;
-		IKey::copy(curKey, k->key);
-		curOffset = k->offset;
+		setCurKey(node, i);
 	}
 
 	// debugging helper

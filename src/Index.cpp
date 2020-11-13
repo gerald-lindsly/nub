@@ -12,6 +12,6 @@ namespace nub {
 
 // basic use template instatiation
 
-template class IndexT<>;
+template struct IndexT<>;
 
 };

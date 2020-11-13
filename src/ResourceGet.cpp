@@ -56,7 +56,10 @@ bool
 ResourceFile::get(const tChar* name, uint32& size, void*& data)
 {
   if (!ndx.find(name)) return false;
-  data = get(ndx.offset(), size);
+  void* key = NULL;
+  datFilePosType ofs;
+  ndx.getCurKey(key, ofs);
+  data = get(ofs, size);
   return true;
 }
 
@@ -92,7 +95,10 @@ bool
 ResourceFile::getSize(const tChar* name, uint32& size, uint32& compressedSize)
 {
     if (!ndx.find(name)) return false;
-    getSize(ndx.offset(), size, compressedSize);
+	void* key = NULL;
+	datFilePosType ofs;
+	ndx.getCurKey(key, ofs);
+	getSize(ofs, size, compressedSize);
     return true;
 }
 

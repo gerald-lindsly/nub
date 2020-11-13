@@ -13,9 +13,7 @@
 #   define __CLR_OR_THIS_CALL
 #endif
 
-#ifndef _MSC_VER
 #define _BADOFF -1
-#endif
 
 namespace nub {
 

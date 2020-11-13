@@ -10,6 +10,6 @@ namespace nub {
 
 // basic use template instatiation
 
-template class IndexT<IKeyUTF16>;
+template struct IndexT<IKeyUTF16>;
 
 };

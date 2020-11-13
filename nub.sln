@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30711.63
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8C7DB2C0-0669-4CD8-8A91-343AB13D5B79}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
@@ -17,14 +19,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nub", "nub.vcxproj", "{523C
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_res", "test_res\test_res.vcxproj", "{189F18A0-D20C-49CD-A252-5152D3FA73B4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nubcs", "..\nubcs\nubcs.vcxproj", "{073052EB-9C86-40E9-A634-1E64CC348FEA}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nubcsPS", "..\nubcs\nubcsPS.vcxproj", "{FEE40E1E-5CAF-473E-80BE-071EB5D24421}"
-	ProjectSection(ProjectDependencies) = postProject
-		{073052EB-9C86-40E9-A634-1E64CC348FEA} = {073052EB-9C86-40E9-A634-1E64CC348FEA}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_gen1000x16", "test_gen1000x16\test_gen1000x16.vcxproj", "{23396BAC-B822-4F1A-A58C-12FB333A7BDB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{523C90C2-0068-4BE0-B618-BB7F70698E53} = {523C90C2-0068-4BE0-B618-BB7F70698E53}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "arch_check", "arch_check\arch_check.vcxproj", "{1C896660-0131-4B08-A50D-285B4567A318}"
 EndProject
@@ -101,37 +99,6 @@ Global
 		{189F18A0-D20C-49CD-A252-5152D3FA73B4}.Release|Win32.ActiveCfg = Release|Win32
 		{189F18A0-D20C-49CD-A252-5152D3FA73B4}.Release|Win32.Build.0 = Release|Win32
 		{189F18A0-D20C-49CD-A252-5152D3FA73B4}.Release|x64.ActiveCfg = Release|x64
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.64-bit Debug|Any CPU.ActiveCfg = 64-bit Debug|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.64-bit Debug|Mixed Platforms.ActiveCfg = 64-bit Debug|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.64-bit Debug|Mixed Platforms.Build.0 = 64-bit Debug|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.64-bit Debug|Win32.ActiveCfg = 64-bit Debug|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.64-bit Debug|Win32.Build.0 = 64-bit Debug|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.64-bit Debug|x64.ActiveCfg = 64-bit Debug|x64
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Debug|Win32.ActiveCfg = Debug|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Debug|Win32.Build.0 = Debug|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Debug|x64.ActiveCfg = Debug|x64
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Release|Any CPU.ActiveCfg = Release|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Release|Win32.ActiveCfg = Release|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Release|Win32.Build.0 = Release|Win32
-		{073052EB-9C86-40E9-A634-1E64CC348FEA}.Release|x64.ActiveCfg = Release|x64
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.64-bit Debug|Any CPU.ActiveCfg = 64-bit Debug|Win32
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.64-bit Debug|Mixed Platforms.ActiveCfg = 64-bit Debug|Win32
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.64-bit Debug|Mixed Platforms.Build.0 = 64-bit Debug|Win32
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.64-bit Debug|Win32.ActiveCfg = 64-bit Debug|Win32
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.64-bit Debug|x64.ActiveCfg = 64-bit Debug|x64
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Debug|Win32.ActiveCfg = Debug|Win32
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Debug|x64.ActiveCfg = Debug|x64
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Release|Any CPU.ActiveCfg = Release|Win32
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Release|Win32.ActiveCfg = Release|Win32
-		{FEE40E1E-5CAF-473E-80BE-071EB5D24421}.Release|x64.ActiveCfg = Release|x64
 		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.64-bit Debug|Any CPU.ActiveCfg = 64-bit Debug|Win32
 		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.64-bit Debug|Mixed Platforms.ActiveCfg = 64-bit Debug|Win32
 		{23396BAC-B822-4F1A-A58C-12FB333A7BDB}.64-bit Debug|Mixed Platforms.Build.0 = 64-bit Debug|Win32
@@ -173,5 +140,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0D4C1D60-A690-421D-BB62-EE0DB84B6377}
 	EndGlobalSection
 EndGlobal
